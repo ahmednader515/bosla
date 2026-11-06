@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type {
   HomepageSetting,
@@ -221,6 +221,7 @@ export function HomepageSettingsForm({
     parsePlatformNewsItems(initialSettings.platformNewsItems),
   );
   const [platformNewsUploading, setPlatformNewsUploading] = useState<string | null>(null);
+  const savedInputs = useRef({ form, platformDetailsItems, platformNewsItems });
 
   useEffect(() => {
     if (!success) return;
@@ -349,99 +350,123 @@ export function HomepageSettingsForm({
         form.heroTemplate === "coming_soon"
           ? form.heroTemplate
           : "classic";
+      const payload = {
+        heroTemplate,
+        teacherImageUrl: form.teacherImageUrl.trim() || null,
+        heroTitle: form.heroTitle.trim() || null,
+        heroTitleEn: form.heroTitleEn.trim() || null,
+        heroSlogan: form.heroSlogan.trim() || null,
+        heroSloganEn: form.heroSloganEn.trim() || null,
+        platformName: form.platformName.trim() || null,
+        platformNameEn: form.platformNameEn.trim() || null,
+        headerLogoUrl: form.headerLogoUrl.trim() || null,
+        primaryColor: primaryNorm,
+        youtubeUrl: form.youtubeUrl.trim() || null,
+        linkedinUrl: form.linkedinUrl.trim() || null,
+        pageTitle: form.pageTitle.trim() || null,
+        pageTitleEn: form.pageTitleEn.trim() || null,
+        whatsappUrl: form.whatsappUrl.trim() || null,
+        facebookUrl: form.facebookUrl.trim() || null,
+        telegramUrl: normalizeTelegramInput(form.telegramUrl) || null,
+        teamYoutubeUrl: form.teamYoutubeUrl.trim() || null,
+        teamLinkedinUrl: form.teamLinkedinUrl.trim() || null,
+        teamWhatsappUrl: form.teamWhatsappUrl.trim() || null,
+        teamFacebookUrl: form.teamFacebookUrl.trim() || null,
+        teamTelegramUrl: normalizeTelegramInput(form.teamTelegramUrl) || null,
+        socialRightLabel: form.socialRightLabel.trim() || null,
+        socialRightLabelEn: form.socialRightLabelEn.trim() || null,
+        socialLeftLabel: form.socialLeftLabel.trim() || null,
+        socialLeftLabelEn: form.socialLeftLabelEn.trim() || null,
+        socialLeftEnabled: form.socialLeftEnabled,
+        heroBgPreset: form.heroBgPreset || null,
+        heroBgCustomFrom: form.heroBgUseCustom ? customFromNorm : null,
+        heroBgCustomTo: form.heroBgUseCustom ? customToNorm : null,
+        heroFloatImage1: form.heroFloatImage1.trim() || null,
+        heroFloatImage2: form.heroFloatImage2.trim() || null,
+        heroFloatImage3: form.heroFloatImage3.trim() || null,
+        heroSliderImage1: form.heroSliderImage1.trim() || null,
+        heroSliderImage2: form.heroSliderImage2.trim() || null,
+        heroSliderImage3: form.heroSliderImage3.trim() || null,
+        heroSliderImage4: form.heroSliderImage4.trim() || null,
+        heroSliderImage5: form.heroSliderImage5.trim() || null,
+        heroSliderCourseId1: form.heroSliderCourseId1.trim() || null,
+        heroSliderCourseId2: form.heroSliderCourseId2.trim() || null,
+        heroSliderCourseId3: form.heroSliderCourseId3.trim() || null,
+        heroSliderCourseId4: form.heroSliderCourseId4.trim() || null,
+        heroSliderCourseId5: form.heroSliderCourseId5.trim() || null,
+        heroSliderIntervalSeconds: Math.round(intervalSecondsRaw),
+        hero3Title: form.hero3Title.trim() || null,
+        hero3TitleEn: form.hero3TitleEn.trim() || null,
+        hero3Subtitle: form.hero3Subtitle.trim() || null,
+        hero3SubtitleEn: form.hero3SubtitleEn.trim() || null,
+        hero3PhoneImageUrl: form.hero3PhoneImageUrl.trim() || null,
+        hero3PhoneBgColor: hero3PhoneBgNorm,
+        hero3StoreBadge1ImageUrl: form.hero3StoreBadge1ImageUrl.trim() || null,
+        hero3StoreBadge1Link: form.hero3StoreBadge1Link.trim() || null,
+        hero3StoreBadge2ImageUrl: form.hero3StoreBadge2ImageUrl.trim() || null,
+        hero3StoreBadge2Link: form.hero3StoreBadge2Link.trim() || null,
+        footerTitle: form.footerTitle.trim() || null,
+        footerTitleEn: form.footerTitleEn.trim() || null,
+        footerTagline: form.footerTagline.trim() || null,
+        footerTaglineEn: form.footerTaglineEn.trim() || null,
+        footerCopyright: form.footerCopyright.trim() || null,
+        footerCopyrightEn: form.footerCopyrightEn.trim() || null,
+        reviewsSectionTitle: form.reviewsSectionTitle.trim() || null,
+        reviewsSectionTitleEn: form.reviewsSectionTitleEn.trim() || null,
+        reviewsSectionSubtitle: form.reviewsSectionSubtitle.trim() || null,
+        reviewsSectionSubtitleEn: form.reviewsSectionSubtitleEn.trim() || null,
+        ctaBadgeText: form.ctaBadgeText.trim() || null,
+        ctaBadgeTextEn: form.ctaBadgeTextEn.trim() || null,
+        ctaTitle: form.ctaTitle.trim() || null,
+        ctaTitleEn: form.ctaTitleEn.trim() || null,
+        ctaDescription: form.ctaDescription.trim() || null,
+        ctaDescriptionEn: form.ctaDescriptionEn.trim() || null,
+        ctaButtonText: form.ctaButtonText.trim() || null,
+        ctaButtonTextEn: form.ctaButtonTextEn.trim() || null,
+        platformDetailsEnabled: form.platformDetailsEnabled,
+        platformDetailsTitle: form.platformDetailsTitle.trim() || null,
+        platformDetailsTitleEn: form.platformDetailsTitleEn.trim() || null,
+        platformDetailsSubtitle: form.platformDetailsSubtitle.trim() || null,
+        platformDetailsSubtitleEn: form.platformDetailsSubtitleEn.trim() || null,
+        platformDetailsBackgroundColor: platformDetailsBgNorm,
+        platformDetailsItems,
+        platformNewsEnabled: form.platformNewsEnabled,
+        platformNewsSectionTitle: form.platformNewsSectionTitle.trim() || null,
+        platformNewsSectionTitleEn: form.platformNewsSectionTitleEn.trim() || null,
+        platformNewsItems: platformNewsItems.filter(
+          (item) => item.imageUrl.trim() && item.description.trim(),
+        ),
+      };
+      const submittedInputs = { form, platformDetailsItems, platformNewsItems };
+      const previous = savedInputs.current;
+      const gradientChanged =
+        form.heroBgUseCustom !== previous.form.heroBgUseCustom ||
+        (form.heroBgUseCustom &&
+          (form.heroBgCustomFrom !== previous.form.heroBgCustomFrom ||
+            form.heroBgCustomTo !== previous.form.heroBgCustomTo));
+      const changes = Object.fromEntries(
+        Object.entries(payload).filter(([key]) => {
+          // The API validates custom gradient colors together.
+          if (key === "heroBgCustomFrom" || key === "heroBgCustomTo") return gradientChanged;
+          if (key === "platformDetailsItems" || key === "platformNewsItems") {
+            return JSON.stringify(submittedInputs[key]) !== JSON.stringify(previous[key]);
+          }
+          const field = key as keyof typeof form;
+          return form[field] !== previous.form[field];
+        }),
+      );
+      if (Object.keys(changes).length === 0) {
+        setSuccess(t(`${Hp}.saveSuccess`));
+        return;
+      }
       const res = await fetch("/api/dashboard/settings/homepage", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          heroTemplate,
-          teacherImageUrl: form.teacherImageUrl.trim() || null,
-          heroTitle: form.heroTitle.trim() || null,
-          heroTitleEn: form.heroTitleEn.trim() || null,
-          heroSlogan: form.heroSlogan.trim() || null,
-          heroSloganEn: form.heroSloganEn.trim() || null,
-          platformName: form.platformName.trim() || null,
-          platformNameEn: form.platformNameEn.trim() || null,
-          headerLogoUrl: form.headerLogoUrl.trim() || null,
-          primaryColor: primaryNorm,
-          youtubeUrl: form.youtubeUrl.trim() || null,
-          linkedinUrl: form.linkedinUrl.trim() || null,
-          pageTitle: form.pageTitle.trim() || null,
-          pageTitleEn: form.pageTitleEn.trim() || null,
-          whatsappUrl: form.whatsappUrl.trim() || null,
-          facebookUrl: form.facebookUrl.trim() || null,
-          telegramUrl: normalizeTelegramInput(form.telegramUrl) || null,
-          teamYoutubeUrl: form.teamYoutubeUrl.trim() || null,
-          teamLinkedinUrl: form.teamLinkedinUrl.trim() || null,
-          teamWhatsappUrl: form.teamWhatsappUrl.trim() || null,
-          teamFacebookUrl: form.teamFacebookUrl.trim() || null,
-          teamTelegramUrl: normalizeTelegramInput(form.teamTelegramUrl) || null,
-          socialRightLabel: form.socialRightLabel.trim() || null,
-          socialRightLabelEn: form.socialRightLabelEn.trim() || null,
-          socialLeftLabel: form.socialLeftLabel.trim() || null,
-          socialLeftLabelEn: form.socialLeftLabelEn.trim() || null,
-          socialLeftEnabled: form.socialLeftEnabled,
-          heroBgPreset: form.heroBgPreset || null,
-          heroBgCustomFrom: form.heroBgUseCustom ? customFromNorm : null,
-          heroBgCustomTo: form.heroBgUseCustom ? customToNorm : null,
-          heroFloatImage1: form.heroFloatImage1.trim() || null,
-          heroFloatImage2: form.heroFloatImage2.trim() || null,
-          heroFloatImage3: form.heroFloatImage3.trim() || null,
-          heroSliderImage1: form.heroSliderImage1.trim() || null,
-          heroSliderImage2: form.heroSliderImage2.trim() || null,
-          heroSliderImage3: form.heroSliderImage3.trim() || null,
-          heroSliderImage4: form.heroSliderImage4.trim() || null,
-          heroSliderImage5: form.heroSliderImage5.trim() || null,
-          heroSliderCourseId1: form.heroSliderCourseId1.trim() || null,
-          heroSliderCourseId2: form.heroSliderCourseId2.trim() || null,
-          heroSliderCourseId3: form.heroSliderCourseId3.trim() || null,
-          heroSliderCourseId4: form.heroSliderCourseId4.trim() || null,
-          heroSliderCourseId5: form.heroSliderCourseId5.trim() || null,
-          heroSliderIntervalSeconds: Math.round(intervalSecondsRaw),
-          hero3Title: form.hero3Title.trim() || null,
-          hero3TitleEn: form.hero3TitleEn.trim() || null,
-          hero3Subtitle: form.hero3Subtitle.trim() || null,
-          hero3SubtitleEn: form.hero3SubtitleEn.trim() || null,
-          hero3PhoneImageUrl: form.hero3PhoneImageUrl.trim() || null,
-          hero3PhoneBgColor: hero3PhoneBgNorm,
-          hero3StoreBadge1ImageUrl: form.hero3StoreBadge1ImageUrl.trim() || null,
-          hero3StoreBadge1Link: form.hero3StoreBadge1Link.trim() || null,
-          hero3StoreBadge2ImageUrl: form.hero3StoreBadge2ImageUrl.trim() || null,
-          hero3StoreBadge2Link: form.hero3StoreBadge2Link.trim() || null,
-          footerTitle: form.footerTitle.trim() || null,
-          footerTitleEn: form.footerTitleEn.trim() || null,
-          footerTagline: form.footerTagline.trim() || null,
-          footerTaglineEn: form.footerTaglineEn.trim() || null,
-          footerCopyright: form.footerCopyright.trim() || null,
-          footerCopyrightEn: form.footerCopyrightEn.trim() || null,
-          reviewsSectionTitle: form.reviewsSectionTitle.trim() || null,
-          reviewsSectionTitleEn: form.reviewsSectionTitleEn.trim() || null,
-          reviewsSectionSubtitle: form.reviewsSectionSubtitle.trim() || null,
-          reviewsSectionSubtitleEn: form.reviewsSectionSubtitleEn.trim() || null,
-          ctaBadgeText: form.ctaBadgeText.trim() || null,
-          ctaBadgeTextEn: form.ctaBadgeTextEn.trim() || null,
-          ctaTitle: form.ctaTitle.trim() || null,
-          ctaTitleEn: form.ctaTitleEn.trim() || null,
-          ctaDescription: form.ctaDescription.trim() || null,
-          ctaDescriptionEn: form.ctaDescriptionEn.trim() || null,
-          ctaButtonText: form.ctaButtonText.trim() || null,
-          ctaButtonTextEn: form.ctaButtonTextEn.trim() || null,
-          platformDetailsEnabled: form.platformDetailsEnabled,
-          platformDetailsTitle: form.platformDetailsTitle.trim() || null,
-          platformDetailsTitleEn: form.platformDetailsTitleEn.trim() || null,
-          platformDetailsSubtitle: form.platformDetailsSubtitle.trim() || null,
-          platformDetailsSubtitleEn: form.platformDetailsSubtitleEn.trim() || null,
-          platformDetailsBackgroundColor: platformDetailsBgNorm,
-          platformDetailsItems,
-          platformNewsEnabled: form.platformNewsEnabled,
-          platformNewsSectionTitle: form.platformNewsSectionTitle.trim() || null,
-          platformNewsSectionTitleEn: form.platformNewsSectionTitleEn.trim() || null,
-          platformNewsItems: platformNewsItems.filter(
-            (item) => item.imageUrl.trim() && item.description.trim(),
-          ),
-        }),
+        body: JSON.stringify(changes),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? t(`${Hp}.saveFailed`));
+      savedInputs.current = submittedInputs;
       setSuccess(t(`${Hp}.saveSuccess`));
       router.refresh();
       window.scrollTo({ top: 0, behavior: "smooth" });
