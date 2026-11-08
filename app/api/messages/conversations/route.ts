@@ -1,7 +1,8 @@
+import { isTeacherRole, teacherScopeId } from "@/lib/permissions";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getUserById, getOrCreateConversation, getConversationsByStaffId, getConversationsByStudentId } from "@/lib/db";
+import { getStudentsEnrolledInTeacherCourses, getUserById, getOrCreateConversation, getConversationsByStaffId, getConversationsByStudentId } from "@/lib/db";
 
 /** قائمة المحادثات أو إنشاء محادثة جديدة (للأدمن/مساعد عند اختيار طالب) */
 export async function GET() {
@@ -11,7 +12,7 @@ export async function GET() {
   }
 
   const role = session.user.role as string;
-  if (role === "ADMIN" || role === "ASSISTANT_ADMIN" || role === "TEACHER") {
+  if (role === "ADMIN" || role === "ASSISTANT_ADMIN" || isTeacherRole(role)) {
     const list = await getConversationsByStaffId(session.user.id);
     return NextResponse.json(list);
   }
@@ -37,10 +38,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "طلب غير صالح" }, { status: 400 });
   }
 
-  if (role === "ADMIN" || role === "ASSISTANT_ADMIN" || role === "TEACHER") {
+  if (role === "ADMIN" || role === "ASSISTANT_ADMIN" || isTeacherRole(role)) {
     const studentId = body.studentId?.trim();
     if (!studentId) {
       return NextResponse.json({ error: "معرف الطالب مطلوب" }, { status: 400 });
+    }
+    if (session.user.role === "TEACHER_ASSISTANT") {
+      const students = await getStudentsEnrolledInTeacherCourses(teacherScopeId(session.user));
+      if (!students.some((student) => student.id === studentId)) return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
     }
     const conversation = await getOrCreateConversation(session.user.id, studentId);
     return NextResponse.json(conversation);

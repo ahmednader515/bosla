@@ -1,3 +1,4 @@
+import { isTeacherRole } from "@/lib/permissions";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -9,7 +10,7 @@ export default async function NewCoursePage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
   const role = session.user.role;
-  if (role !== "ADMIN" && role !== "ASSISTANT_ADMIN" && role !== "TEACHER") {
+  if (role !== "ADMIN" && role !== "ASSISTANT_ADMIN" && !isTeacherRole(role)) {
     redirect("/dashboard");
   }
   const t = await getServerTranslator();

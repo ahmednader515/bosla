@@ -1,7 +1,7 @@
+import { teacherScopeId, canManageCourse } from "@/lib/permissions";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { canManageCourse } from "@/lib/permissions";
 import { getCourseForEdit } from "@/lib/db";
 
 /** جلب اختبارات دورة — للأدمن/مساعد الأدمن (عناوين فقط للاختيار في نطاق الكود) */
@@ -25,7 +25,7 @@ export async function GET(
     }
     const c0 = data.course as { createdById?: string | null; created_by_id?: string | null };
     const createdBy = c0.createdById ?? c0.created_by_id ?? null;
-    if (!canManageCourse(session.user.role, session.user.id, createdBy)) {
+    if (!canManageCourse(session.user.role, teacherScopeId(session.user), createdBy)) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
     }
     const quizzes = (data.quizzes ?? []).map((q) => ({

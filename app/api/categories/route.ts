@@ -1,3 +1,4 @@
+import { teacherScopeId, isTeacherRole } from "@/lib/permissions";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -11,10 +12,10 @@ export async function GET() {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
     }
     const role = session.user.role;
-    if (role !== "ADMIN" && role !== "ASSISTANT_ADMIN" && role !== "TEACHER") {
+    if (role !== "ADMIN" && role !== "ASSISTANT_ADMIN" && !isTeacherRole(role)) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
     }
-    const categories = await getCategoriesForDashboard(session.user.id, role);
+    const categories = await getCategoriesForDashboard(teacherScopeId(session.user), role);
     return NextResponse.json(categories);
   } catch (error) {
     console.error("API categories:", error);

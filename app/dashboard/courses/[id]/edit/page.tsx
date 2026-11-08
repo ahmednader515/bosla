@@ -1,9 +1,9 @@
+import { teacherScopeId, isTeacherRole, canManageCourse } from "@/lib/permissions";
 import { getServerSession } from "next-auth";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import { getCourseForEdit } from "@/lib/db";
-import { canManageCourse } from "@/lib/permissions";
 import { EditCourseForm, type ContentOrderEntry } from "./EditCourseForm";
 
 type Props = { params: Promise<{ id: string }> };
@@ -39,7 +39,7 @@ export default async function EditCoursePage({ params }: Props) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
   const role = session.user.role;
-  if (role !== "ADMIN" && role !== "TEACHER") {
+  if (role !== "ADMIN" && !isTeacherRole(role)) {
     redirect("/dashboard");
   }
 
@@ -53,7 +53,7 @@ export default async function EditCoursePage({ params }: Props) {
     (c.createdById as string | null | undefined) ??
     (c.created_by_id as string | null | undefined) ??
     null;
-  if (!canManageCourse(role, session.user.id, createdBy)) {
+  if (!canManageCourse(role, teacherScopeId(session.user), createdBy)) {
     redirect("/dashboard");
   }
   const initialData = {

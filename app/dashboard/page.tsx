@@ -1,3 +1,4 @@
+import { teacherScopeId, isTeacherRole } from "@/lib/permissions";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -29,10 +30,10 @@ export default async function DashboardPage() {
   const isAdmin = session.user.role === "ADMIN";
   const isAssistant = session.user.role === "ASSISTANT_ADMIN";
   const isStudent = session.user.role === "STUDENT";
-  const isTeacher = session.user.role === "TEACHER";
+  const isTeacher = isTeacherRole(session.user.role);
 
   if (isTeacher) {
-    const myCourses = await getCoursesWithCountsForCreator(session.user.id).catch(() => []);
+    const myCourses = await getCoursesWithCountsForCreator(teacherScopeId(session.user)).catch(() => []);
     const publishedCount = myCourses.filter((c) => {
       const row = c as Record<string, unknown>;
       return Boolean(row.isPublished ?? row.is_published ?? false);

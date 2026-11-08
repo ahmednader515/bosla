@@ -1,7 +1,7 @@
+import { teacherScopeId, isTeacherRole, canManageCourse } from "@/lib/permissions";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { canManageCourse } from "@/lib/permissions";
 import { getCourseById, getLiveStreamById, updateLiveStream, deleteLiveStream } from "@/lib/db";
 import { parseScheduledAtIso } from "@/lib/datetime-local";
 
@@ -25,13 +25,13 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
-  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "ASSISTANT_ADMIN" && session.user.role !== "TEACHER")) {
+  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "ASSISTANT_ADMIN" && !isTeacherRole(session.user.role))) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
   const { id } = await params;
   const stream = await getLiveStreamById(id);
   if (!stream) return NextResponse.json({ error: "البث غير موجود" }, { status: 404 });
-  const ok = await assertStaffCanAccessStream(session.user.role, session.user.id, stream as { course_id?: string });
+  const ok = await assertStaffCanAccessStream(session.user.role, teacherScopeId(session.user), stream as { course_id?: string });
   if (!ok) return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   return NextResponse.json(stream);
 }
@@ -42,13 +42,13 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
-  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "ASSISTANT_ADMIN" && session.user.role !== "TEACHER")) {
+  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "ASSISTANT_ADMIN" && !isTeacherRole(session.user.role))) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
   const { id } = await params;
   const existing = await getLiveStreamById(id);
   if (!existing) return NextResponse.json({ error: "البث غير موجود" }, { status: 404 });
-  const okPut = await assertStaffCanAccessStream(session.user.role, session.user.id, existing as { course_id?: string });
+  const okPut = await assertStaffCanAccessStream(session.user.role, teacherScopeId(session.user), existing as { course_id?: string });
   if (!okPut) return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   let body: {
     courseId?: string;
@@ -101,13 +101,13 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
-  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "ASSISTANT_ADMIN" && session.user.role !== "TEACHER")) {
+  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "ASSISTANT_ADMIN" && !isTeacherRole(session.user.role))) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
   const { id } = await params;
   const existing = await getLiveStreamById(id);
   if (!existing) return NextResponse.json({ error: "البث غير موجود" }, { status: 404 });
-  const okDel = await assertStaffCanAccessStream(session.user.role, session.user.id, existing as { course_id?: string });
+  const okDel = await assertStaffCanAccessStream(session.user.role, teacherScopeId(session.user), existing as { course_id?: string });
   if (!okDel) return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   await deleteLiveStream(id);
   return NextResponse.json({ ok: true });

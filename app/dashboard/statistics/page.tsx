@@ -1,3 +1,4 @@
+import { teacherScopeId, isTeacherRole } from "@/lib/permissions";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
@@ -18,17 +19,17 @@ export default async function StatisticsPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
   const role = session.user.role;
-  if (role !== "ADMIN" && role !== "ASSISTANT_ADMIN" && role !== "TEACHER") {
+  if (role !== "ADMIN" && role !== "ASSISTANT_ADMIN" && !isTeacherRole(role)) {
     redirect("/dashboard");
   }
   const t = await getServerTranslator();
 
-  if (role === "TEACHER") {
-    const teacherId = session.user.id;
+  if (isTeacherRole(role)) {
+    const teacherId = teacherScopeId(session.user);
     const [students, attempts, totalEarnings, myCourses] = await Promise.all([
       getStudentsEnrolledInTeacherCourses(teacherId),
       getQuizAttemptsForTeacher(teacherId).catch(() => []),
-      getTotalEarningsForTeacher(teacherId),
+      role === "TEACHER_ASSISTANT" ? null : getTotalEarningsForTeacher(teacherId),
       getCoursesWithCountsForCreator(teacherId),
     ]);
     const myCourseIds = new Set(myCourses.map((row) => String((row as { id?: unknown }).id ?? "")));

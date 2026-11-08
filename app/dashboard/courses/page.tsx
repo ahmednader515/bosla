@@ -1,3 +1,4 @@
+import { teacherScopeId, isTeacherRole } from "@/lib/permissions";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -10,14 +11,14 @@ export default async function DashboardCoursesPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
   const role = session.user.role;
-  if (role !== "ADMIN" && role !== "ASSISTANT_ADMIN" && role !== "TEACHER") {
+  if (role !== "ADMIN" && role !== "ASSISTANT_ADMIN" && !isTeacherRole(role)) {
     redirect("/dashboard");
   }
   const t = await getServerTranslator();
 
   const courses =
-    role === "TEACHER"
-      ? await getCoursesWithCountsForCreator(session.user.id)
+    isTeacherRole(role)
+      ? await getCoursesWithCountsForCreator(teacherScopeId(session.user))
       : await getCoursesWithCounts();
 
   const coursesPlain = courses.map((c) => {
@@ -45,7 +46,7 @@ export default async function DashboardCoursesPage() {
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-xl font-bold text-[var(--color-foreground)]">
-          {role === "TEACHER" ? t("dashboard.coursesRoutePage.titleTeacher") : t("dashboard.coursesRoutePage.titleStaff")}
+          {isTeacherRole(role) ? t("dashboard.coursesRoutePage.titleTeacher") : t("dashboard.coursesRoutePage.titleStaff")}
         </h2>
         <Link
           href="/dashboard/courses/new"

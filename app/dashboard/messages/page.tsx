@@ -1,3 +1,4 @@
+import { isTeacherRole } from "@/lib/permissions";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
@@ -11,7 +12,7 @@ export default async function MessagesPage() {
   const isStaff =
     session.user.role === "ADMIN" ||
     session.user.role === "ASSISTANT_ADMIN" ||
-    session.user.role === "TEACHER";
+    isTeacherRole(session.user.role);
   const isStudent = session.user.role === "STUDENT";
   if (!isStaff && !isStudent) redirect("/dashboard");
   const t = await getServerTranslator();
@@ -23,7 +24,7 @@ export default async function MessagesPage() {
       </h2>
       <p className="mb-6 text-sm text-[var(--color-muted)]">
         {isStaff
-          ? session.user.role === "TEACHER"
+          ? isTeacherRole(session.user.role)
             ? t("dashboard.messagesPage.staffSubtitleTeacher")
             : t("dashboard.messagesPage.staffSubtitleAdmin")
           : t("dashboard.messagesPage.studentSubtitle")}

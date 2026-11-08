@@ -1,3 +1,4 @@
+import { teacherScopeId, isTeacherRole } from "@/lib/permissions";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -29,8 +30,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(list);
     }
 
-    if (session.user.role === "TEACHER") {
-      const list = await listHomeworkSubmissionsForTeacher(session.user.id, studentSearch || null);
+    if (isTeacherRole(session.user.role)) {
+      const list = await listHomeworkSubmissionsForTeacher(teacherScopeId(session.user), studentSearch || null);
       return NextResponse.json(list);
     }
 
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
 /** حذف تسليمات واجبات — أدمن/مساعد: حذف المحدد (ids) أو حذف الكل (deleteAll) */
 export async function DELETE(request: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id || (session.user.role !== "ADMIN" && session.user.role !== "ASSISTANT_ADMIN" && session.user.role !== "TEACHER")) {
+  if (!session?.user?.id || (session.user.role !== "ADMIN" && session.user.role !== "ASSISTANT_ADMIN" && !isTeacherRole(session.user.role))) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
   let body: { ids?: string[]; deleteAll?: boolean };
@@ -68,19 +69,19 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "طلب غير صالح" }, { status: 400 });
   }
   if (body.deleteAll === true) {
-    if (session.user.role === "TEACHER") {
+    if (isTeacherRole(session.user.role)) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
     }
     await deleteAllHomeworkSubmissions();
     return NextResponse.json({ success: true, deleted: "all" });
   }
-  let ids = Array.isArray(body.ids) ? body.ids.filter((id) => typeof id === "string" && id.trim()) : [];
+  const ids = Array.isArray(body.ids) ? body.ids.filter((id) => typeof id === "string" && id.trim()) : [];
   if (ids.length === 0) {
     return NextResponse.json({ error: "حدّد تسليمات للحذف أو استخدم حذف الكل" }, { status: 400 });
   }
   const count =
-    session.user.role === "TEACHER"
-      ? await deleteHomeworkSubmissionsByIdsForTeacher(session.user.id, ids)
+    isTeacherRole(session.user.role)
+      ? await deleteHomeworkSubmissionsByIdsForTeacher(teacherScopeId(session.user), ids)
       : await deleteHomeworkSubmissionsByIds(ids);
   return NextResponse.json({ success: true, deleted: count });
 }

@@ -1,3 +1,4 @@
+import { teacherScopeId, isTeacherRole } from "@/lib/permissions";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -13,7 +14,7 @@ export async function DELETE(
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
   const role = session.user.role;
-  if (role !== "ADMIN" && role !== "ASSISTANT_ADMIN" && role !== "TEACHER") {
+  if (role !== "ADMIN" && role !== "ASSISTANT_ADMIN" && !isTeacherRole(role)) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
 
@@ -22,7 +23,7 @@ export async function DELETE(
     return NextResponse.json({ error: "معرّف القسم مطلوب" }, { status: 400 });
   }
 
-  const allowed = await categoryIsManageableOnDashboard(id, session.user.id, role);
+  const allowed = await categoryIsManageableOnDashboard(id, teacherScopeId(session.user), role);
   if (!allowed) {
     return NextResponse.json({ error: "لا يمكن حذف هذا القسم" }, { status: 403 });
   }

@@ -25,6 +25,7 @@ export const arMessages: Messages = {
       ADMIN: "أدمن",
       ASSISTANT_ADMIN: "مساعد الأدمن",
       STUDENT: "طالب",
+      TEACHER_ASSISTANT: "مساعد مدرس",
       TEACHER: "مدرس",
     },
     platformSubscriptionActive: "أنت مشترك في اشتراك المنصة",
@@ -1168,6 +1169,13 @@ export const arMessages: Messages = {
       deleteSuccess: "تم حذف سجل الاشتراك",
     },
     teachersAdmin: {
+      assistants: "مساعدو المدرس",
+      assistantsHint: "يمكن للمساعدين إدارة دورات هذا المدرس والأدوات المرتبطة بها. لكل مساعد حساب مستقل لتسجيل الدخول.",
+      assistantsLoading: "جارٍ تحميل المساعدين…",
+      assistantsEmpty: "لا يوجد مساعدون لهذا المدرس بعد.",
+      createAssistant: "إنشاء حساب مساعد",
+      assistantPassword: "كلمة المرور (6–72 حرفاً)",
+      confirmDeleteAssistant: "حذف حساب المساعد",
       multiTeachersTitle: "تعدد المدرسين على المنصة",
       multiTeachersIntro:
         "عند التفعيل يظهر في الموقع قسم «اختر المدرسين»، ويُسمح لك بإنشاء حسابات برتبة مدرس. عند الإيقاف يختفي القسم ولا يمكن إنشاء مدرسين جدد حتى إعادة التفعيل.",

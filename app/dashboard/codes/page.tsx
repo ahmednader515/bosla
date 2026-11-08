@@ -1,3 +1,4 @@
+import { teacherScopeId, isTeacherRole } from "@/lib/permissions";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
@@ -9,12 +10,12 @@ export default async function DashboardCodesPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
   const isStaff = session.user.role === "ADMIN" || session.user.role === "ASSISTANT_ADMIN";
-  const isTeacher = session.user.role === "TEACHER";
+  const isTeacher = isTeacherRole(session.user.role);
   if (!isStaff && !isTeacher) redirect("/dashboard");
   const t = await getServerTranslator();
 
   const courses = isTeacher
-    ? await getCoursesWithCountsForCreator(session.user.id).catch(() => [])
+    ? await getCoursesWithCountsForCreator(teacherScopeId(session.user)).catch(() => [])
     : await getCoursesAll();
   const courseOptions = courses.map((c) => ({
     id: String((c as { id?: unknown }).id ?? ""),

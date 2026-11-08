@@ -1,3 +1,4 @@
+import { teacherScopeId, isTeacherRole } from "@/lib/permissions";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -34,7 +35,7 @@ type QuizInput = { title: string; timeLimitMinutes?: number | null; questions: Q
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "ASSISTANT_ADMIN" && session.user.role !== "TEACHER")) {
+  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "ASSISTANT_ADMIN" && !isTeacherRole(session.user.role))) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
 
@@ -87,8 +88,8 @@ export async function POST(request: NextRequest) {
   const role = session.user.role;
   if (catNameAr || catNameEn) {
     let cat =
-      (catNameAr ? await findCategoryByNameForDashboard(catNameAr, session.user.id, role) : null) ??
-      (catNameEn ? await findCategoryByNameForDashboard(catNameEn, session.user.id, role) : null);
+      (catNameAr ? await findCategoryByNameForDashboard(catNameAr, teacherScopeId(session.user), role) : null) ??
+      (catNameEn ? await findCategoryByNameForDashboard(catNameEn, teacherScopeId(session.user), role) : null);
     if (!cat) {
       const slugBase = (catNameEn || catNameAr || "cat");
       const slugCat = slugBase.toLowerCase().replace(/\s+/g, "-").replace(/[^\w\u0600-\u06FF-]+/g, "") || "cat";
@@ -97,13 +98,13 @@ export async function POST(request: NextRequest) {
         name: catNameEn || catNameAr || slugBase,
         name_ar: catNameAr || catNameEn || slugBase,
         slug: uniqueSlug,
-        created_by_id: session.user.id,
+        created_by_id: teacherScopeId(session.user),
       });
     }
     categoryId = cat.id;
   } else if (body.categoryId?.trim()) {
     const cid = body.categoryId.trim();
-    const ok = await categoryIsManageableOnDashboard(cid, session.user.id, role);
+    const ok = await categoryIsManageableOnDashboard(cid, teacherScopeId(session.user), role);
     if (!ok) {
       return NextResponse.json({ error: "القسم غير صالح أو غير مسموح" }, { status: 400 });
     }
@@ -123,7 +124,7 @@ export async function POST(request: NextRequest) {
       image_url: body.imageUrl?.trim() || null,
       price: body.price ?? 0,
       is_published: true,
-      created_by_id: session.user.id,
+      created_by_id: teacherScopeId(session.user),
       max_quiz_attempts: body.maxQuizAttempts ?? null,
       category_id: categoryId,
       accepts_homework: !!body.acceptsHomework,

@@ -1,7 +1,7 @@
+import { teacherScopeId, canManageCourse } from "@/lib/permissions";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { canManageCourse } from "@/lib/permissions";
 import {
   getCourseById,
   getCourseForEdit,
@@ -69,7 +69,7 @@ export async function PUT(
     return NextResponse.json({ error: "الدورة غير موجودة" }, { status: 404 });
   }
   const createdBy = (course as { createdById?: string | null; created_by_id?: string | null }).createdById ?? (course as { created_by_id?: string | null }).created_by_id ?? null;
-  if (!canManageCourse(session.user.role, session.user.id, createdBy)) {
+  if (!canManageCourse(session.user.role, teacherScopeId(session.user), createdBy)) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
   const slug = (course as { slug?: string }).slug ?? "";
@@ -93,8 +93,8 @@ export async function PUT(
   const catNameEn = (body.categoryNameEn ?? body.categoryName)?.trim();
   if (catNameAr || catNameEn) {
     let cat =
-      (catNameAr ? await findCategoryByNameForDashboard(catNameAr, session.user.id, role) : null) ??
-      (catNameEn ? await findCategoryByNameForDashboard(catNameEn, session.user.id, role) : null);
+      (catNameAr ? await findCategoryByNameForDashboard(catNameAr, teacherScopeId(session.user), role) : null) ??
+      (catNameEn ? await findCategoryByNameForDashboard(catNameEn, teacherScopeId(session.user), role) : null);
     if (!cat) {
       const slugBase = catNameEn || catNameAr || "cat";
       const slugCat = slugBase.toLowerCase().replace(/\s+/g, "-").replace(/[^\w\u0600-\u06FF-]+/g, "") || "cat";
@@ -103,7 +103,7 @@ export async function PUT(
         name: catNameEn || catNameAr || slugBase,
         name_ar: catNameAr || catNameEn || slugBase,
         slug: uniqueSlug,
-        created_by_id: session.user.id,
+        created_by_id: teacherScopeId(session.user),
       });
     }
     categoryId = cat.id;
@@ -113,7 +113,7 @@ export async function PUT(
     } else {
       const incoming = String(body.categoryId).trim();
       if (incoming !== currentCategoryId) {
-        const ok = await categoryIsManageableOnDashboard(incoming, session.user.id, role);
+        const ok = await categoryIsManageableOnDashboard(incoming, teacherScopeId(session.user), role);
         if (!ok) {
           return NextResponse.json({ error: "القسم غير صالح أو غير مسموح" }, { status: 400 });
         }
@@ -223,7 +223,7 @@ export async function GET(
   }
   const c0 = data.course as { createdById?: string | null; created_by_id?: string | null };
   const createdBy = c0.createdById ?? c0.created_by_id ?? null;
-  if (!canManageCourse(session.user.role, session.user.id, createdBy)) {
+  if (!canManageCourse(session.user.role, teacherScopeId(session.user), createdBy)) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
 
@@ -285,7 +285,7 @@ export async function DELETE(
     return NextResponse.json({ error: "الدورة غير موجودة" }, { status: 404 });
   }
   const createdByDel = (course as { createdById?: string | null; created_by_id?: string | null }).createdById ?? (course as { created_by_id?: string | null }).created_by_id ?? null;
-  if (!canManageCourse(session.user.role, session.user.id, createdByDel)) {
+  if (!canManageCourse(session.user.role, teacherScopeId(session.user), createdByDel)) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
 

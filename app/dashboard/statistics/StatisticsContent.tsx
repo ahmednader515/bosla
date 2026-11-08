@@ -33,7 +33,7 @@ type Props = {
   studentsCount: number;
   totalEnrollments: number;
   attemptsCount: number;
-  totalEarnings: number;
+  totalEarnings: number | null;
   attempts: Attempt[];
   studentsWithDetails: StudentWithDetails[];
   titleSuffix?: string;
@@ -118,7 +118,7 @@ export default function StatisticsContent({
         )}
       </div>
 
-      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className={`mb-8 grid gap-4 sm:grid-cols-2 ${totalEarnings === null ? "lg:grid-cols-3" : "lg:grid-cols-4"}`}>
         <div className="rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
           <p className="text-sm text-[var(--color-muted)]">{t(`${pq}.cardStudents`, "Students")}</p>
           <p className="text-2xl font-bold text-[var(--color-foreground)]">{studentsCount}</p>
@@ -131,6 +131,7 @@ export default function StatisticsContent({
           <p className="text-sm text-[var(--color-muted)]">{t(`${pq}.cardAttempts`, "Quiz attempts")}</p>
           <p className="text-2xl font-bold text-[var(--color-foreground)]">{attemptsCount}</p>
         </div>
+        {totalEarnings !== null && (
         <div className="rounded-[var(--radius-card)] border border-[var(--color-primary)]/30 bg-[var(--color-primary-light)]/20 p-4">
           <p className="text-sm text-[var(--color-muted)]">{t(`${pq}.cardEarningsTitle`, "Total platform earnings")}</p>
           <p className="text-2xl font-bold text-[var(--color-primary)]">
@@ -140,6 +141,7 @@ export default function StatisticsContent({
             {t(`${pq}.cardEarningsHint`, "From student balance paid to enroll in courses")}
           </p>
         </div>
+        )}
       </div>
 
       <section className="mb-8 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6">

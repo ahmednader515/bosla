@@ -25,6 +25,7 @@ export const enMessages: Messages = {
       ADMIN: "Admin",
       ASSISTANT_ADMIN: "Assistant admin",
       STUDENT: "Student",
+      TEACHER_ASSISTANT: "Teacher assistant",
       TEACHER: "Teacher",
     },
     platformSubscriptionActive: "You are subscribed to the platform subscription",
@@ -1170,6 +1171,13 @@ export const enMessages: Messages = {
       deleteSuccess: "Subscription record deleted",
     },
     teachersAdmin: {
+      assistants: "Assistants",
+      assistantsHint: "Assistants can manage this teacher’s courses and related tools. Each assistant signs in with their own account.",
+      assistantsLoading: "Loading assistants…",
+      assistantsEmpty: "No assistants for this teacher yet.",
+      createAssistant: "Create assistant",
+      assistantPassword: "Password (6–72 characters)",
+      confirmDeleteAssistant: "Delete assistant account",
       multiTeachersTitle: "Multiple teachers on the platform",
       multiTeachersIntro:
         'When enabled, the site shows a «Choose teachers» section and you can create teacher accounts. When disabled, the section is hidden and you cannot add teachers until re-enabled.',

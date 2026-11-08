@@ -1,3 +1,4 @@
+import { isTeacherRole } from "@/lib/permissions";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
@@ -13,7 +14,7 @@ export default async function DashboardLayout({
 
   const isAdmin = session.user.role === "ADMIN";
   const isAssistant = session.user.role === "ASSISTANT_ADMIN";
-  const isTeacher = session.user.role === "TEACHER";
+  const isTeacher = isTeacherRole(session.user.role);
 
   return (
     <>

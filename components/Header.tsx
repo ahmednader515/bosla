@@ -6,7 +6,7 @@ import { useState, useRef, useEffect } from "react";
 import type { UserRole } from "@/lib/types";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageToggle } from "@/components/LanguageToggle";
-import { useT, useLocalizedEnumValue } from "@/components/LocaleProvider";
+import { useT } from "@/components/LocaleProvider";
 
 function UserMenu() {
   const { data: session, status } = useSession();
@@ -25,10 +25,11 @@ function UserMenu() {
   if (status !== "authenticated" || !session?.user) return null;
 
   const roleLabel: Record<UserRole, string> = {
-    ADMIN: useLocalizedEnumValue("ADMIN", "header.role", "Admin"),
-    ASSISTANT_ADMIN: useLocalizedEnumValue("ASSISTANT_ADMIN", "header.role", "Assistant admin"),
-    STUDENT: useLocalizedEnumValue("STUDENT", "header.role", "Student"),
-    TEACHER: useLocalizedEnumValue("TEACHER", "header.role", "Teacher"),
+    ADMIN: t("header.role.ADMIN", "Admin"),
+    ASSISTANT_ADMIN: t("header.role.ASSISTANT_ADMIN", "Assistant admin"),
+    STUDENT: t("header.role.STUDENT", "Student"),
+    TEACHER_ASSISTANT: t("header.role.TEACHER_ASSISTANT"),
+    TEACHER: t("header.role.TEACHER", "Teacher"),
   };
 
   return (

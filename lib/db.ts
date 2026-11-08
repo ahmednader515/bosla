@@ -1,3 +1,4 @@
+import { isTeacherRole } from "@/lib/permissions";
 import "dotenv/config";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
@@ -546,7 +547,7 @@ export async function getCategories(): Promise<Category[]> {
 /** أقسام تظهر في لوحة إنشاء/تعديل الدورة: المدرس يرى أقسامه فقط؛ الأدمن يرى أقسام المنصة وأقسام أي أدمن/مساعد */
 export async function getCategoriesForDashboard(userId: string, role: UserRole): Promise<Category[]> {
   await ensureCategoryCreatedByColumn();
-  if (role === "TEACHER") {
+  if (isTeacherRole(role)) {
     const rows = await sql`
       SELECT * FROM "Category"
       WHERE created_by_id = ${userId}
@@ -586,7 +587,7 @@ export async function categoryIsManageableOnDashboard(
   await ensureCategoryCreatedByColumn();
   const id = categoryId.trim();
   if (!id) return false;
-  if (role === "TEACHER") {
+  if (isTeacherRole(role)) {
     const rows = await sql`
       SELECT 1 FROM "Category" c
       WHERE c.id = ${id} AND c.created_by_id = ${userId}
@@ -656,7 +657,7 @@ export async function findCategoryByNameForDashboard(
   await ensureCategoryCreatedByColumn();
   const n = name.trim();
   if (!n) return null;
-  if (role === "TEACHER") {
+  if (isTeacherRole(role)) {
     const rows = await sql`
       SELECT * FROM "Category"
       WHERE created_by_id = ${userId}
@@ -4649,6 +4650,8 @@ export async function deleteTeacherUser(userId: string): Promise<void> {
   const u = await getUserById(userId);
   if (!u) throw new Error("المستخدم غير موجود");
   if (u.role !== "TEACHER") throw new Error("يمكن حذف حسابات المدرسين فقط");
+  const assistants = await listTeacherAssistants(userId);
+  for (const assistant of assistants) await deleteUserAccount(assistant.id);
   await deleteUserAccount(userId);
 }
 
@@ -4789,7 +4792,7 @@ export async function getStaffForStudentMessaging(): Promise<{ id: string; role:
 }
 
 export async function canUserAccessConversation(userId: string, role: UserRole, conversation: Conversation): Promise<boolean> {
-  if (role === "ADMIN" || role === "ASSISTANT_ADMIN" || role === "TEACHER") {
+  if (role === "ADMIN" || role === "ASSISTANT_ADMIN" || isTeacherRole(role)) {
     return conversation.staffUserId === userId;
   }
   if (role === "STUDENT") return conversation.studentUserId === userId;
@@ -4829,4 +4832,27 @@ export async function createMessage(data: {
   await sql`UPDATE "Conversation" SET updated_at = NOW() WHERE id = ${data.conversation_id}`;
   const rows = await sql`SELECT * FROM "Message" WHERE id = ${id} LIMIT 1`;
   return rowToCamel(rows[0] as Record<string, unknown>) as Message;
+}
+
+/** The deployment migration scripts/add-teacher-assistants.sql adds this relation. */
+export async function listTeacherAssistants(teacherId: string): Promise<Pick<User, "id" | "name" | "email" | "created_at">[]> {
+  // Existing installations can list teachers before the migration is applied.
+  try {
+    return await sql`SELECT id, name, email, created_at FROM "User" WHERE teacher_id = ${teacherId} AND role::text = 'TEACHER_ASSISTANT' ORDER BY created_at, id` as Pick<User, "id" | "name" | "email" | "created_at">[];
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('teacher_id') && error.message.includes('does not exist')) return [];
+    throw error;
+  }
+}
+
+export async function createTeacherAssistant(teacherId: string, data: { name: string; email: string; password_hash: string }): Promise<string> {
+  const id = generateId();
+  const rows = await sql`
+    INSERT INTO "User" (id, name, email, password_hash, role, teacher_id)
+    SELECT ${id}, ${data.name}, ${data.email}, ${data.password_hash}, 'TEACHER_ASSISTANT', id
+    FROM "User" WHERE id = ${teacherId} AND role = 'TEACHER'
+    RETURNING id
+  `;
+  if (!rows.length) throw new Error("Teacher not found");
+  return id;
 }

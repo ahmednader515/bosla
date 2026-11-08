@@ -135,3 +135,9 @@ npm run db:seed
 - ألوان هادئة ومناسبة للتعلم (أخضر مزرق/teal)
 - متجاوب مع الجوال وسهل التصفح
 "# test" 
+
+### Teacher assistant accounts
+
+Before deploying this feature, run `scripts/add-teacher-assistants.sql` in the Neon SQL editor (or with psql). It adds the assistant role and teacher relationship; existing accounts are preserved.
+
+Admins can open **Dashboard → Teachers → Assistants** beside a teacher to create multiple assistants using a name, email, and password, or delete an assistant. Assistants sign in independently and manage only the assigned teacher’s courses, categories, homework, streams, codes, and statistics. New courses belong to the teacher. Assistants have their own student conversations and cannot manage platform settings, balances, or staff accounts. Removing an assistant revokes their login; removing a teacher also removes their assistants.

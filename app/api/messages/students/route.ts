@@ -1,3 +1,4 @@
+import { teacherScopeId, isTeacherRole } from "@/lib/permissions";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -10,13 +11,13 @@ export async function GET() {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
   const role = session.user.role as string;
-  if (role !== "ADMIN" && role !== "ASSISTANT_ADMIN" && role !== "TEACHER") {
+  if (role !== "ADMIN" && role !== "ASSISTANT_ADMIN" && !isTeacherRole(role)) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
 
   const students =
-    role === "TEACHER"
-      ? await getStudentsEnrolledInTeacherCourses(session.user.id)
+    isTeacherRole(role)
+      ? await getStudentsEnrolledInTeacherCourses(teacherScopeId(session.user))
       : await getUsersByRole("STUDENT");
   return NextResponse.json(students.map((u) => ({ id: u.id, name: u.name, email: u.email })));
 }

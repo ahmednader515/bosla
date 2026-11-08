@@ -1,5 +1,6 @@
 "use client";
 
+import { TeacherAssistantsPanel } from "./TeacherAssistantsPanel";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useT } from "@/components/LocaleProvider";
@@ -65,6 +66,7 @@ export function TeachersAdminClient({
   const t = useT();
   const Ta = "dashboard.teachersAdmin";
   const { dir, thClass } = useDashboardTable();
+  const [assistantTeacher, setAssistantTeacher] = useState<TeacherRow | null>(null);
   const [enabled, setEnabled] = useState(initialEnabled);
   const [teachers, setTeachers] = useState(initialTeachers);
   const [toggleLoading, setToggleLoading] = useState(false);
@@ -524,6 +526,7 @@ export function TeachersAdminClient({
                         <td className="px-4 py-3 text-[var(--color-muted)]">{row.subject ?? "—"}</td>
                         <td className="px-4 py-3">
                           <div className="flex flex-wrap gap-2">
+                            <button type="button" onClick={() => setAssistantTeacher(row)} className="rounded-[var(--radius-btn)] border border-[var(--color-border)] px-3 py-1 text-xs font-medium hover:bg-[var(--color-border)]/40">{t(`${Ta}.assistants`)}</button>
                             <button
                               type="button"
                               onClick={() => openEdit(row)}
@@ -550,6 +553,7 @@ export function TeachersAdminClient({
         </>
       ) : null}
 
+      {assistantTeacher ? <TeacherAssistantsPanel key={assistantTeacher.id} teacher={assistantTeacher} onClose={() => setAssistantTeacher(null)} /> : null}
       {editOpen ? (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"

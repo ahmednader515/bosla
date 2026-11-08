@@ -2,7 +2,7 @@
  * أنواع البيانات المطابقة لجداول Neon (بدون Prisma)
  */
 
-export type UserRole = "ADMIN" | "ASSISTANT_ADMIN" | "STUDENT" | "TEACHER";
+export type UserRole = "ADMIN" | "ASSISTANT_ADMIN" | "STUDENT" | "TEACHER" | "TEACHER_ASSISTANT";
 
 export interface User {
   id: string;
@@ -14,6 +14,7 @@ export interface User {
   student_number?: string | null;
   guardian_number?: string | null;
   /** عنوان المادة / التخصص — يظهر في «اختر المدرسين» */
+  teacher_id?: string | null;
   teacher_subject?: string | null;
   teacher_avatar_url?: string | null;
   /** 1–4 لترتيب البطاقة في الرئيسية؛ null = تلقائي بعد المحددين */

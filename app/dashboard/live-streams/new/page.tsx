@@ -1,3 +1,4 @@
+import { teacherScopeId, isTeacherRole } from "@/lib/permissions";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -9,13 +10,13 @@ export default async function NewLiveStreamPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
   const role = session.user.role;
-  if (role !== "ADMIN" && role !== "ASSISTANT_ADMIN" && role !== "TEACHER") {
+  if (role !== "ADMIN" && role !== "ASSISTANT_ADMIN" && !isTeacherRole(role)) {
     redirect("/dashboard");
   }
 
   const courses =
-    role === "TEACHER"
-      ? await getCoursesWithCountsForCreator(session.user.id).then((rows) =>
+    isTeacherRole(role)
+      ? await getCoursesWithCountsForCreator(teacherScopeId(session.user)).then((rows) =>
           rows.map((r) => {
             const row = r as Record<string, unknown>;
             return {

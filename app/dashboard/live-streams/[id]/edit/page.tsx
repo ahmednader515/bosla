@@ -1,9 +1,9 @@
+import { teacherScopeId, isTeacherRole, canManageCourse } from "@/lib/permissions";
 import { getServerSession } from "next-auth";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import { getLiveStreamById, getCoursesAll, getCoursesWithCountsForCreator, getCourseById } from "@/lib/db";
-import { canManageCourse } from "@/lib/permissions";
 import { LiveStreamForm } from "../../LiveStreamForm";
 
 type Props = { params: Promise<{ id: string }> };
@@ -18,7 +18,7 @@ export default async function EditLiveStreamPage({ params }: Props) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
   const role = session.user.role;
-  if (role !== "ADMIN" && role !== "ASSISTANT_ADMIN" && role !== "TEACHER") {
+  if (role !== "ADMIN" && role !== "ASSISTANT_ADMIN" && !isTeacherRole(role)) {
     redirect("/dashboard");
   }
 
@@ -33,13 +33,13 @@ export default async function EditLiveStreamPage({ params }: Props) {
     (courseForPerm as { createdById?: string | null; created_by_id?: string | null } | null)?.createdById ??
     (courseForPerm as { created_by_id?: string | null } | null)?.created_by_id ??
     null;
-  if (!canManageCourse(role, session.user.id, createdBy)) {
+  if (!canManageCourse(role, teacherScopeId(session.user), createdBy)) {
     redirect("/dashboard");
   }
 
   const courses =
-    role === "TEACHER"
-      ? await getCoursesWithCountsForCreator(session.user.id).then((rows) =>
+    isTeacherRole(role)
+      ? await getCoursesWithCountsForCreator(teacherScopeId(session.user)).then((rows) =>
           rows.map((r) => {
             const row = r as Record<string, unknown>;
             return {

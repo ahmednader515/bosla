@@ -1,3 +1,4 @@
+import { teacherScopeId, isTeacherRole } from "@/lib/permissions";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -10,7 +11,7 @@ export default async function DashboardLiveStreamsPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
   const role = session.user.role;
-  if (role !== "ADMIN" && role !== "ASSISTANT_ADMIN" && role !== "TEACHER") {
+  if (role !== "ADMIN" && role !== "ASSISTANT_ADMIN" && !isTeacherRole(role)) {
     redirect("/dashboard");
   }
   const t = await getServerTranslator();
@@ -19,8 +20,8 @@ export default async function DashboardLiveStreamsPage() {
   let streams: Awaited<ReturnType<typeof getLiveStreamsAll>>;
   try {
     streams =
-      role === "TEACHER"
-        ? await getLiveStreamsForTeacher(session.user.id)
+      isTeacherRole(role)
+        ? await getLiveStreamsForTeacher(teacherScopeId(session.user))
         : await getLiveStreamsAll();
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

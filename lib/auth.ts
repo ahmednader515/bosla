@@ -3,7 +3,7 @@ import { decode as defaultJwtDecode } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { randomUUID } from "crypto";
-import { getUserByEmailOrPhone, getCurrentSessionId, setCurrentSessionId } from "@/lib/db";
+import { getUserById, getUserByEmailOrPhone, getCurrentSessionId, setCurrentSessionId } from "@/lib/db";
 import type { UserRole } from "@/lib/types";
 import { CONCURRENT_SESSION_ERROR } from "@/lib/auth-constants";
 
@@ -40,6 +40,10 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) return null;
         const user = await getUserByEmailOrPhone(credentials.email);
         if (!user) return null;
+        if (user.role === "TEACHER_ASSISTANT") {
+          const teacher = user.teacher_id ? await getUserById(user.teacher_id) : null;
+          if (teacher?.role !== "TEACHER") return null;
+        }
         const ok = await compare(credentials.password, user.password_hash);
         if (!ok) return null;
         const existingSessionId = await getCurrentSessionId(user.id);
@@ -72,6 +76,14 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as { id?: string }).id = token.id as string;
         (session.user as { role?: UserRole }).role = token.role as UserRole;
+        const account = await getUserById(token.id as string);
+        if (!account) return null as unknown as typeof session;
+        session.user.role = account.role;
+        if (account.role === "TEACHER_ASSISTANT") {
+          const teacher = account.teacher_id ? await getUserById(account.teacher_id) : null;
+          if (teacher?.role !== "TEACHER") return null as unknown as typeof session;
+          session.user.teacherId = teacher.id;
+        }
         const { getCurrentSessionId: getSessionId } = await import("@/lib/db");
         const dbSessionId = await getSessionId((session.user as { id: string }).id);
         const sessionMismatch = !dbSessionId || dbSessionId.trim() === "" || dbSessionId !== token.sessionId;

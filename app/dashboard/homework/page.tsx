@@ -1,3 +1,4 @@
+import { isTeacherRole } from "@/lib/permissions";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
@@ -8,7 +9,7 @@ export default async function DashboardHomeworkPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
   const isStaff = session.user.role === "ADMIN" || session.user.role === "ASSISTANT_ADMIN";
-  const isTeacher = session.user.role === "TEACHER";
+  const isTeacher = isTeacherRole(session.user.role);
   if (!isStaff && !isTeacher) redirect("/dashboard");
   const t = await getServerTranslator();
 

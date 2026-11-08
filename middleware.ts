@@ -1,3 +1,4 @@
+import { isTeacherRole } from "@/lib/permissions";
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
@@ -23,14 +24,14 @@ export default withAuth(
         }
         return NextResponse.redirect(new URL("/dashboard", req.url));
       }
-      if (role === "ADMIN" || role === "ASSISTANT_ADMIN" || role === "TEACHER") {
+      if (role === "ADMIN" || role === "ASSISTANT_ADMIN" || isTeacherRole(role)) {
         return NextResponse.next();
       }
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
     const teacherBlocked =
-      role === "TEACHER" &&
+      isTeacherRole(role) &&
       (path.startsWith("/dashboard/settings/homepage") ||
         path.startsWith("/dashboard/reviews") ||
         path.startsWith("/dashboard/password-change-requests"));

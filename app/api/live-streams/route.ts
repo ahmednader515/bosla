@@ -1,19 +1,19 @@
+import { teacherScopeId, isTeacherRole, canManageCourse } from "@/lib/permissions";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { canManageCourse } from "@/lib/permissions";
 import { getCourseById, getLiveStreamsAll, getLiveStreamsForTeacher, createLiveStream } from "@/lib/db";
 import { parseScheduledAtIso } from "@/lib/datetime-local";
 
 /** قائمة كل البثوث — للأدمن ومساعد الأدمن؛ للمدرس: بثوث كورساته فقط */
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "ASSISTANT_ADMIN" && session.user.role !== "TEACHER")) {
+  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "ASSISTANT_ADMIN" && !isTeacherRole(session.user.role))) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
   const streams =
-    session.user.role === "TEACHER"
-      ? await getLiveStreamsForTeacher(session.user.id)
+    isTeacherRole(session.user.role)
+      ? await getLiveStreamsForTeacher(teacherScopeId(session.user))
       : await getLiveStreamsAll();
   return NextResponse.json(streams);
 }
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 /** إنشاء بث مباشر جديد */
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "ASSISTANT_ADMIN" && session.user.role !== "TEACHER")) {
+  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "ASSISTANT_ADMIN" && !isTeacherRole(session.user.role))) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
   let body: {
@@ -48,10 +48,10 @@ export async function POST(request: NextRequest) {
   if (provider !== "zoom" && provider !== "google_meet") {
     return NextResponse.json({ error: "نوع البث يجب أن يكون zoom أو google_meet" }, { status: 400 });
   }
-  if (session.user.role === "TEACHER") {
+  if (isTeacherRole(session.user.role)) {
     const course = await getCourseById(courseId.trim());
     const createdBy = course ? ((course as { createdById?: string | null; created_by_id?: string | null }).createdById ?? (course as { created_by_id?: string | null }).created_by_id ?? null) : null;
-    if (!course || !canManageCourse("TEACHER", session.user.id, createdBy)) {
+    if (!course || !canManageCourse("TEACHER", teacherScopeId(session.user), createdBy)) {
       return NextResponse.json({ error: "غير مصرح بإضافة بث لهذا الكورس" }, { status: 403 });
     }
   }

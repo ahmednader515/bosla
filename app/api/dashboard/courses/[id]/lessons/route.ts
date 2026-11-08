@@ -1,7 +1,7 @@
+import { teacherScopeId, canManageCourse } from "@/lib/permissions";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { canManageCourse } from "@/lib/permissions";
 import { getCourseById, getLessonsByCourseId } from "@/lib/db";
 
 /** جلب حصص دورة — للأدمن/مساعد الأدمن */
@@ -23,7 +23,7 @@ export async function GET(
     return NextResponse.json({ error: "الدورة غير موجودة" }, { status: 404 });
   }
   const createdBy = (course as { createdById?: string | null; created_by_id?: string | null }).createdById ?? (course as { created_by_id?: string | null }).created_by_id ?? null;
-  if (!canManageCourse(session.user.role, session.user.id, createdBy)) {
+  if (!canManageCourse(session.user.role, teacherScopeId(session.user), createdBy)) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
 
